@@ -4,52 +4,80 @@
 <html>
 <head>
 <meta charset="ISO-8859-1">
-<link rel="stylesheet" type="text/css" href="css/main.css">
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
-<script>
-$(document).ready(function(){
-  $("#haku").on("keyup", function() {
-    var value = $(this).val().toLowerCase();
-    $("#data tr").filter(function() {
-      $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
-    });
-  });
-});
-</script>
-<title>Listaa Asiakkaat</title>
+<link rel="stylesheet" type="text/css" href="css/main.css">
+<title>Asiakkaiden listaus</title>
 </head>
 <body>
-
-<input id="haku" type="text" placeholder="Etsi listasta">
-
-<table id="listaus">
-	<thead>		
+	<table id="listaus">
+		<thead>
 		<tr>
-			<th>Etunimi</th>
-			<th>Sukunimi</th>
-			<th>Puhelin</th>
-			<th>Sähköposti</th>							
+			<th colspan="5" class="oikealle"><span id="uusiAsiakas">Lisää asiakas</span></th>
 		</tr>
-	</thead>
-	<tbody id="data">
-	</tbody>
-</table>
+			<tr>
+				<th colspan="3" class="oikealle">Hakusana:</th>
+				<th><input type="text" id="hakusana"></th>
+				<th><input type="button" id="hae" value="Hae"></th>
+			</tr>		
+			<tr>
+				<th>Etunimi</th>
+				<th>Sukunimi</th>
+				<th>Puhelin</th>
+				<th>Sposti</th>
+				<th></th>		
+			</tr>
+		</thead>
+		<tbody>
+		</tbody>
+	</table>
 <script>
-$(document).ready(function(){
-	$.ajax({url:"asiakkaat", type:"GET", dataType:"json", success:function(result){//Funktio palauttaa tiedot json-objektina		
-		$.each(result.asiakkaat, function(i, field){  
+$(document).ready(function(){	
+	$("#uusiAsiakas").click(function(){		//kun klikataan uusiAsiakas-spania, siirrytään toiseen dokumenttiin
+		document.location="lisaaasiakas.jsp";
+	});
+	$(document.body).on("keydown", function(event){
+		  if(event.which==13){ //Enteriä painettu, ajetaan haku
+			  haeTiedot();
+		  }
+	});	
+	$("#hae").click(function(){	//hae-nappulaa klikattu, ajetaan haku
+		haeTiedot();
+	});
+	$("#hakusana").focus();//viedään kursori hakusana-kenttään sivun latauksen yhteydessä
+	haeTiedot();
+});
+function haeTiedot(){	
+	$("#listaus tbody").empty(); //tyhjentää tbody:n elementit ja tekstin
+	//$.getJSON on $.ajax:n alifunktio, joka on erikoistunut jsonin hakemiseen. Kumpaakin voi tässä käyttää.
+	//$.getJSON({url:"asiakkaat/"+$("#hakusana").val(), type:"GET", success:function(result){
+	$.ajax({url:"asiakkaat/"+$("#hakusana").val(), type:"GET", dataType:"json", success:function(result){	//kutsuu asiakkaat servlettiä 		$("#hakusana").val() on hakusana-id:n arvo	type:GET> kutsuuservletin doGet-funktiota, tulos asettuu resultiin
+		$.each(result.asiakkaat, function(i, field){  		//looppaa asiakas-objektin läpi niin kauan kuin dataa löytyy
         	var htmlStr;
-        	htmlStr+="<tr>";
+        	htmlStr+="<tr id='rivi_"+field.asiakas_id+"'>";
         	htmlStr+="<td>"+field.etunimi+"</td>";
         	htmlStr+="<td>"+field.sukunimi+"</td>";
         	htmlStr+="<td>"+field.puhelin+"</td>";
-        	htmlStr+="<td>"+field.sposti+"</td>";  
+        	htmlStr+="<td>"+field.sposti+"</td>";
+        	htmlStr+="<td><span class='poista' onclick=poista('"+field.asiakas_id+"')>Poista</span></td>";
         	htmlStr+="</tr>";
-        	$("#listaus tbody").append(htmlStr);	//listaus-nimisen elementin tbodyyn lisätään muuttuja htmlStr
-        });	
-    }});
-});	
-
+        	$("#listaus tbody").append(htmlStr);		//lisää looppi kerrallaan taulukkoon
+        });
+    }});	
+}
+function poista(asiakas_id){
+	if(confirm("Haluatko varmasti poistaa asiakkaan?")){
+		$.ajax({url:"asiakkaat/"+asiakas_id, type:"DELETE", dataType:"json", success:function(result) { //result on joko {"response:1"} tai {"response:0"}
+	        if(result.response==0){
+	        	$("#ilmo").html("Asiakkaan poisto epäonnistui.");
+	        }else if(result.response==1){
+	        	$("#rivi_"+asiakas_id).css("background-color", "red"); //Värjätään poistetun asiakkaan rivi
+	        	alert("Asiakkaan poisto onnistui.");
+				haeTiedot();        	
+			}
+	    }});
+	}
+	
+}
 </script>
 </body>
 </html>

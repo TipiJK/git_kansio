@@ -8,7 +8,7 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
 <script src="http://ajax.aspnetcdn.com/ajax/jquery.validate/1.15.0/jquery.validate.min.js"></script>
 <link rel="stylesheet" type="text/css" href="css/main.css">
-<title>Lis‰‰ asiakas</title>
+<title>Muuta tietoja</title>
 </head>
 <body>
 <form id="tiedot">
@@ -31,10 +31,11 @@
 				<td><input type="text" name="sukunimi" id="sukunimi"></td>
 				<td><input type="text" name="puhelin" id="puhelin"></td>
 				<td><input type="text" name="sposti" id="sposti"></td> 
-				<td><input type="submit" id="tallenna" value="Lis‰‰"></td>
+				<td><input type="submit" id="tallenna" value="Tallenna muutokset"></td>
 			</tr>
 		</tbody>
 	</table>
+		<input type="hidden" name="asiakas_id" id="asiakas_id">
 </form>
 <span id="ilmo"></span>
 </body>
@@ -43,6 +44,17 @@ $(document).ready(function(){
 	$("#takaisin").click(function(){	//kunteelee takaisin-painiketta 
 		document.location="listaaasiakkaat.jsp";
 	});
+	
+	var asiakas_id = requestURLParam("asiakas_id");
+	$.ajax({url:"asiakkaat/haeyksi/"+asiakas_id, type:"GET", dataType:"json", success:function(result) {
+		$("#asiakas_id").val(result.asiakas_id);
+		$("#etunimi").val(result.etunimi);
+		$("#sukunimi").val(result.sukunimi);
+		$("#puhelin").val(result.puhelin);
+		$("#sposti").val(result.sposti);
+	}
+		});
+	
 	$("#tiedot").validate({			//tiedot-lomakkeen validointi			
 		rules: {
 			etunimi:  {
@@ -93,20 +105,19 @@ $(document).ready(function(){
 			}
 		},			
 		submitHandler: function(form) {	//kun validointi menee l‰pi, kutsutaan lisaaTiedot-funktiota
-			lisaaTiedot();
+			paivitaTiedot();
 		}		
 	});
 	$("#etunimi").focus(); // siirt‰‰ kursorin etunimi-kentt‰‰n sivun latautuessa
 });
-//funktio tietojen lis‰‰mist‰ varten. Kutsutaan backin POST-metodia ja v‰litet‰‰n kutsun mukana uudet tiedot json-stringin‰.
-//POST /autot/
-function lisaaTiedot(){	
+
+function paivitaTiedot(){	
 	var formJsonStr = formDataJsonStr($("#tiedot").serializeArray()); //serialize muuttaa lomakkeen tiedot muuttuja/arvo-pareiksi rekno:arvo&merkki:arvo&..., mutta REST tarvii JSON stringin>formDataJsonStr-funktio muuttaa sen (sijainti main.js)
-	$.ajax({url:"asiakkaat", data:formJsonStr, type:"POST", dataType:"json", success:function(result) { //kutsuu autot servletin doPost-funktiota, result on joko {"response:1"} tai {"response:0"}       
+	$.ajax({url:"asiakkaat", data:formJsonStr, type:"PUT", dataType:"json", success:function(result) { //kutsuu autot servletin doPut-funktiota, result on joko {"response:1"} tai {"response:0"}       
 		if(result.response==0){
-      	$("#ilmo").html("Asiakkaan lis‰‰minen ep‰onnistui.");
+      	$("#ilmo").html("Asiakkaan tietojen muuttaminen ep‰onnistui.");
       }else if(result.response==1){			
-      	$("#ilmo").html("Asiakkaan lis‰‰minen onnistui.");
+      	$("#ilmo").html("Asiakkaan muuttaminen onnistui.");
       	$("#etunimi", "#sukunimi", "#puhelin", "#sposti").val("");
 		}
   }});	

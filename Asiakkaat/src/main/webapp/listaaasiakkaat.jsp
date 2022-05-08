@@ -24,7 +24,7 @@
 				<th>Sukunimi</th>
 				<th>Puhelin</th>
 				<th>Sposti</th>
-				<th></th>		
+				<th>&nbsp;</th>		<!-- v‰lilyˆnti -->
 			</tr>
 		</thead>
 		<tbody>
@@ -58,14 +58,15 @@ function haeTiedot(){
         	htmlStr+="<td>"+field.sukunimi+"</td>";
         	htmlStr+="<td>"+field.puhelin+"</td>";
         	htmlStr+="<td>"+field.sposti+"</td>";
-        	htmlStr+="<td><span class='poista' onclick=poista('"+field.asiakas_id+"')>Poista</span></td>";
+        	htmlStr+="<td><a href='muutaasiakas.jsp?asiakas_id="+field.asiakas_id+"'>Muuta</a>&nbsp;";  
+        	htmlStr+="<span class='poista' onclick=poista("+field.asiakas_id+",'"+field.etunimi+"','"+field.sukunimi+"')>Poista</span></td>"; //klikkaamalla v‰litet‰‰n id&nimi poista-funktioon
         	htmlStr+="</tr>";
         	$("#listaus tbody").append(htmlStr);		//lis‰‰ looppi kerrallaan taulukkoon
         });
     }});	
 }
-function poista(asiakas_id){
-	if(confirm("Haluatko varmasti poistaa asiakkaan?")){
+function poista(asiakas_id, etunimi, sukunimi){
+	if(confirm("Haluatko varmasti poistaa asiakkaan " + etunimi+ " " + sukunimi + "?")){
 		$.ajax({url:"asiakkaat/"+asiakas_id, type:"DELETE", dataType:"json", success:function(result) { //result on joko {"response:1"} tai {"response:0"}
 	        if(result.response==0){
 	        	$("#ilmo").html("Asiakkaan poisto ep‰onnistui.");

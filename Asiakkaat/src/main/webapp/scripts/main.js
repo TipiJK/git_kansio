@@ -9,7 +9,7 @@ function requestURLParam(sParam){
         }
     }
 }
-function formDataJsonStr(formArray) {			//muuttaa muuttuja/arvo-parit JSON stringiksi
+function formDataJsonStr(formArray) {			//muuttaa merkkijonot muuttuja/arvo-pareiksi (JSON string)
 	var returnArray = {};
 	for (var i = 0; i < formArray.length; i++){
 		returnArray[formArray[i]['name']] = formArray[i]['value'];

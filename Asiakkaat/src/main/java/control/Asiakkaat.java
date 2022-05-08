@@ -27,7 +27,7 @@ public class Asiakkaat extends HttpServlet {
 		System.out.println("Asiakkaat.doGet()");
 		String pathInfo = request.getPathInfo();	//haetaan kutsun polkutiedot, esim. /aalto			
 		System.out.println("polku: "+pathInfo);				//tulostaa tietoa konsoliin
-		String hakusana="";
+		/*String hakusana="";
 		if(pathInfo!=null) {		//jos hakusana on tyhj‰ ja yritt‰‰ korvata sit‰, ohjelma kaatuu. Siksi ehto.
 			hakusana = pathInfo.replace("/", ""); //poistaa kauttaviivan, j‰ljelle j‰‰ vain hakusana
 		}		
@@ -37,12 +37,42 @@ public class Asiakkaat extends HttpServlet {
 		String strJSON = new JSONObject().put("asiakkaat", asiakkaat).toString();	//muodostaa JSON stringin
 		response.setContentType("application/json");
 		PrintWriter out = response.getWriter();
-		out.println(strJSON);		//tulostaa tietoa selaimeen
+		out.println(strJSON);		//tulostaa tietoa selaimeen*/
+		
+		Dao dao = new Dao();
+		ArrayList<Asiakas> asiakkaat;
+		String strJSON="";
+		if(pathInfo==null) {
+			asiakkaat = dao.listaaKaikki();
+			strJSON = new JSONObject().put("asiakkaat", asiakkaat).toString();	
+		}else if(pathInfo.indexOf("haeyksi")!=-1) {		//polussa on sana "haeyksi", eli haetaan yhden asiakkaan tiedot
+			int asiakas_id = Integer.parseInt(pathInfo.replace("/haeyksi/", "")); //poistetaan polusta "/haeyksi/", j‰ljelle j‰‰ asiakasnro	
+			Asiakas asiakas = dao.etsiAsiakas(asiakas_id);
+			if(asiakas==null) {
+				strJSON = "{}"; //korjaa virheen, jossa etsitt‰v‰‰ objektia ei ole olemassa, palauttaa tyhj‰n objektin
+			}else {
+			JSONObject JSON = new JSONObject();
+			JSON.put("asiakas_id", asiakas.getAsiakas_id());	
+			JSON.put("etunimi", asiakas.getEtunimi());
+			JSON.put("sukunimi", asiakas.getSukunimi());
+			JSON.put("puhelin", asiakas.getPuhelin());
+			JSON.put("sposti", asiakas.getSposti());	
+			strJSON = JSON.toString();
+			System.out.println("yksi asiakas haettu");
+			}
+		}else{ //Haetaan hakusanan mukaiset autot
+			String hakusana = pathInfo.replace("/", "");
+			asiakkaat = dao.listaaKaikki(hakusana);
+			strJSON = new JSONObject().put("asiakkaat", asiakkaat).toString();	
+		}	
+		response.setContentType("application/json");		// m‰‰ritell‰‰n tyyppi
+		PrintWriter out = response.getWriter();
+		out.println(strJSON);
 	}
 	
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		System.out.println("Asiakkaat.doPost()");
-		JSONObject jsonObj = new JsonStrToObj().convert(request); //Muutetaan kutsun mukana tuleva json-string json-objektiksi	(sijaitsee control/JsonStrToObj.java)
+		JSONObject jsonObj = new JsonStrToObj().convert(request); //Muutetaan kutsun mukana tuleva json-string objektiksi	(sijaitsee control/JsonStrToObj.java)
 		Asiakas asiakas = new Asiakas();
 		asiakas.setEtunimi(jsonObj.getString("etunimi"));		//nimien t‰ytyy olla samat kuin syˆtt‰v‰ss‰ lomakkeessa
 		asiakas.setSukunimi(jsonObj.getString("sukunimi"));
@@ -59,7 +89,22 @@ public class Asiakkaat extends HttpServlet {
 	}
 	
 	protected void doPut(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		System.out.println("Asiakkaat.doPut()");		
+		System.out.println("Asiakkaat.doPut()");
+		JSONObject jsonObj = new JsonStrToObj().convert(request); //Muutetaan kutsun mukana tuleva json-string json-objektiksi			
+		Asiakas asiakas = new Asiakas();
+		asiakas.setAsiakas_id(jsonObj.getInt("asiakas_id"));
+		asiakas.setEtunimi(jsonObj.getString("etunimi"));
+		asiakas.setSukunimi(jsonObj.getString("sukunimi"));
+		asiakas.setPuhelin(jsonObj.getString("puhelin"));
+		asiakas.setSposti(jsonObj.getString("sposti"));
+		response.setContentType("application/json");
+		PrintWriter out = response.getWriter();
+		Dao dao = new Dao();			
+		if(dao.muutaAsiakas(asiakas)){ //metodi palauttaa true/false
+			out.println("{\"response\":1}");  //muuttaminen onnistui {"response":1}
+		}else{
+			out.println("{\"response\":0}");  //muuttaminen ep‰onnistui {"response":0}
+		}
 	}
 	
 	protected void doDelete(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
